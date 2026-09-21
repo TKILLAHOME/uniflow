@@ -8,6 +8,7 @@ import (
 	"github.com/semaphoreui/semaphore/pro/services/tasks/docker"
 	"github.com/semaphoreui/semaphore/pro/services/tasks/k8s"
 	"github.com/semaphoreui/semaphore/services/tasks"
+	"github.com/semaphoreui/semaphore/services/tasks/podman"
 	"github.com/semaphoreui/semaphore/util"
 )
 
@@ -33,6 +34,17 @@ func newExecutorProvider(executorCfg *util.ExecutorConfig, keyInstaller db_lib.A
 			dockerCfg = executorCfg.Docker
 		}
 		return docker.NewProvider(dockerCfg)
+	case util.ExecutorTypePodman:
+		podmanCfg := util.PodmanConfig{}
+		if executorCfg != nil {
+			podmanCfg = executorCfg.Podman
+		}
+		return podman.NewProvider(podman.Config{
+			Socket:             podmanCfg.Socket,
+			RunAsUser:          podmanCfg.RunAsUser,
+			Network:            podmanCfg.Network,
+			PullTimeoutSeconds: podmanCfg.PullTimeoutSeconds,
+		}, keyInstaller)
 	default:
 		return nil, fmt.Errorf("unknown runner executor type %q", resolveExecutorType(executorCfg))
 	}

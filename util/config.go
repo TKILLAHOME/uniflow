@@ -137,12 +137,14 @@ const (
 	ExecutorTypeLocal      ExecutorType = "local"
 	ExecutorTypeKubernetes ExecutorType = "k8s"
 	ExecutorTypeDocker     ExecutorType = "docker"
+	ExecutorTypePodman     ExecutorType = "podman"
 )
 
 type ExecutorConfig struct {
 	Type   ExecutorType       `json:"type" default:"local" env:"SEMAPHORE_RUNNER_EXECUTOR_TYPE"`
 	K8s    RunnerK8sConfig    `json:"k8s"`
 	Docker RunnerDockerConfig `json:"docker"`
+	Podman PodmanConfig       `json:"podman"`
 }
 
 type RunnerConfig struct {
@@ -251,6 +253,26 @@ type RunnerDockerConfig struct {
 
 	// Privileged runs the build container with --privileged. Dangerous; off by default.
 	Privileged bool `json:"privileged,omitempty" env:"SEMAPHORE_RUNNER_DOCKER_PRIVILEGED"`
+}
+
+// PodmanConfig holds runner-side configuration for the UniFlow Podman executor.
+// Each task runs in an ephemeral rootless container — no daemon required.
+type PodmanConfig struct {
+	// Socket is the Podman socket path. Supports rootless sockets.
+	// Defaults to /run/podman/podman.sock when empty.
+	Socket string `json:"socket,omitempty" env:"SEMAPHORE_RUNNER_PODMAN_SOCKET"`
+
+	// RunAsUser sets the UID inside the container (non-root enforcement).
+	// Defaults to "1000".
+	RunAsUser string `json:"run_as_user,omitempty" default:"1000" env:"SEMAPHORE_RUNNER_PODMAN_RUN_AS_USER"`
+
+	// Network sets the container network mode (host, bridge, none).
+	// Defaults to "host" so managed hosts are reachable without extra config.
+	Network string `json:"network,omitempty" default:"host" env:"SEMAPHORE_RUNNER_PODMAN_NETWORK"`
+
+	// PullTimeoutSeconds is the maximum time to wait for an image pull.
+	// Defaults to 300.
+	PullTimeoutSeconds int `json:"pull_timeout_seconds,omitempty" default:"300" env:"SEMAPHORE_RUNNER_PODMAN_PULL_TIMEOUT"`
 }
 
 type DefultGlobalRunnerMode string
